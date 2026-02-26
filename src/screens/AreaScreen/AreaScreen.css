@@ -1,0 +1,118 @@
+/* ── AreaScreen ─────────────────────────────────────── */
+.area-screen {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--bg);
+  padding-bottom: 100px;
+}
+
+/* Header */
+.area-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px var(--space-md);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.btn-back {
+  min-height: var(--touch-min);
+  min-width: 56px;
+  font-size: 17px;
+  color: var(--brand);
+  font-weight: 600;
+  padding: 0;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.area-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-top: 6px;
+}
+
+.area-header-label {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.area-header-hint {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Required warning */
+.area-required-warning {
+  margin: var(--space-md);
+  padding: 10px 12px;
+  background: var(--brand-light);
+  border: 1px solid var(--brand-mid);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--brand-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.required-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--brand);
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* Photo list */
+.area-photos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-md);
+}
+
+/* Add photo strip */
+.area-add-strip {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px var(--space-md) 24px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.btn-add-photo {
+  width: 100%;
+  height: var(--touch-min);
+  border-radius: var(--radius);
+  border: 2px dashed var(--border-strong);
+  background: var(--surface-2);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.btn-add-photo:active {
+  border-color: var(--brand);
+  background: var(--brand-light);
+  color: var(--brand);
+}
+
+.btn-add-icon {
+  font-size: 18px;
+}

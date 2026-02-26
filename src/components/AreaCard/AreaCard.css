@@ -1,0 +1,104 @@
+/* ── AreaCard ────────────────────────────────────────── */
+.area-card {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+  padding: 12px 8px;
+  transition: transform 0.1s, box-shadow 0.1s;
+  cursor: pointer;
+}
+
+.area-card:active {
+  transform: scale(0.97);
+}
+
+/* Empty state */
+.area-card.empty {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.area-card-icon {
+  font-size: 26px;
+}
+
+.area-card-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.area-card-required {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--brand);
+  background: var(--brand-light);
+  border: 1px solid var(--brand-mid);
+  padding: 2px 7px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* Captured state */
+.area-card.captured {
+  border: 2px solid var(--success);
+  box-shadow: var(--shadow);
+}
+
+.area-card-thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.area-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 50%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 8px;
+  gap: 4px;
+}
+
+.area-card-label-sm {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.area-card-badges {
+  display: flex;
+  gap: 4px;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 20px;
+}
+
+.badge-photos {
+  background: rgba(255,255,255,0.85);
+  color: var(--text-primary);
+}
+
+.badge-marks {
+  background: var(--annotation, #FF3B30);
+  color: #fff;
+}

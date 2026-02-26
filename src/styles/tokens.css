@@ -1,0 +1,52 @@
+/* ── EyEagle Brand Tokens ───────────────────────────── */
+/* Carried over from v1. Edit here to update globally.  */
+:root {
+  /* Brand */
+  --brand:       #cc0000;
+  --brand-dark:  #a30000;
+  --brand-light: #fff0f0;
+  --brand-mid:   #ffd6d6;
+
+  /* Annotation tool colour (on-canvas) */
+  --annotation:  #FF3B30;
+
+  /* Surfaces */
+  --bg:          #f6f4f2;
+  --surface:     #ffffff;
+  --surface-2:   #faf9f8;
+
+  /* Borders */
+  --border:      #e8e4e0;
+  --border-strong: #ccc8c4;
+
+  /* Text */
+  --text-primary:   #1a1a1a;
+  --text-secondary: #6b6560;
+  --text-muted:     #9e9894;
+
+  /* Status */
+  --success:  #2e7d32;
+  --warning:  #c17d00;
+  --error:    #cc0000;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius:    10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow:    0 2px 8px rgba(0,0,0,0.10);
+  --shadow-lg: 0 4px 20px rgba(0,0,0,0.12);
+
+  /* Touch targets */
+  --touch-min: 48px;
+
+  /* Spacing scale */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  32px;
+}
