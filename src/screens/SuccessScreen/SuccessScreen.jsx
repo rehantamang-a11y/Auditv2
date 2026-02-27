@@ -6,19 +6,14 @@
  * Responsibilities:
  *  - Confirm email was sent and WhatsApp was opened
  *  - Show a brief summary of what was submitted
- *  - "Start New Audit" button → resets context and returns to HomeScreen
+ *  - "Back to Audits" button → returns to AuditListScreen
  */
 
 import { useAudit } from '../../context/AuditContext';
 import './SuccessScreen.css';
 
-export default function SuccessScreen({ onNewAudit }) {
-  const { audit, totalPhotos, resetAudit } = useAudit();
-
-  const handleNewAudit = () => {
-    resetAudit();
-    onNewAudit();
-  };
+export default function SuccessScreen({ onBackToAudits }) {
+  const { audit, totalPhotos } = useAudit();
 
   return (
     <div className="success-screen">
@@ -46,8 +41,8 @@ export default function SuccessScreen({ onNewAudit }) {
           </div>
         </div>
 
-        <button className="btn-new-audit" onClick={handleNewAudit}>
-          Start New Audit
+        <button className="btn-new-audit" onClick={onBackToAudits}>
+          Back to Audits
         </button>
       </div>
     </div>

@@ -5,50 +5,73 @@
  * screen state is held in memory for speed and simplicity on mobile.
  *
  * Screen stack:
- *   home → area → annotate → (back to area) → review → success
+ *   login → audit_list → home → area → annotate → review → success → audit_list
  *
- * Navigation is prop-drilled via `onNavigate` callbacks.
- * If the app grows, replace with a lightweight router or useReducer.
+ * On load: checks localStorage for a logged-in user.
+ * If found → audit_list. If not → login.
  */
 
 import { useState } from 'react';
-import { AuditProvider } from './context/AuditContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuditProvider }         from './context/AuditContext';
 
-import HomeScreen     from './screens/HomeScreen/HomeScreen';
-import AreaScreen     from './screens/AreaScreen/AreaScreen';
-import AnnotateScreen from './screens/AnnotateScreen/AnnotateScreen';
-import ReviewScreen   from './screens/ReviewScreen/ReviewScreen';
-import SuccessScreen  from './screens/SuccessScreen/SuccessScreen';
+import LoginScreen      from './screens/LoginScreen/LoginScreen';
+import AuditListScreen  from './screens/AuditListScreen/AuditListScreen';
+import HomeScreen       from './screens/HomeScreen/HomeScreen';
+import AreaScreen       from './screens/AreaScreen/AreaScreen';
+import AnnotateScreen   from './screens/AnnotateScreen/AnnotateScreen';
+import ReviewScreen     from './screens/ReviewScreen/ReviewScreen';
+import SuccessScreen    from './screens/SuccessScreen/SuccessScreen';
 
 import './styles/global.css';
 
 // ── Screen identifiers ────────────────────────────────────────────
 const SCREENS = {
-  HOME:     'home',
-  AREA:     'area',
-  ANNOTATE: 'annotate',
-  REVIEW:   'review',
-  SUCCESS:  'success',
+  LOGIN:      'login',
+  AUDIT_LIST: 'audit_list',
+  HOME:       'home',
+  AREA:       'area',
+  ANNOTATE:   'annotate',
+  REVIEW:     'review',
+  SUCCESS:    'success',
 };
 
-export default function App() {
-  const [screen, setScreen]         = useState(SCREENS.HOME);
+// ── Inner router (has access to AuthContext) ──────────────────────
+function AppRouter() {
+  const { user } = useAuth();
+
+  const [screen, setScreen]             = useState(user.loggedIn ? SCREENS.AUDIT_LIST : SCREENS.LOGIN);
   const [activeAreaId, setActiveAreaId] = useState(null);
-  const [activePhotoId, setActivePhotoId] = useState(null); // for annotate screen
+  const [activePhotoId, setActivePhotoId] = useState(null);
 
   // ── Navigation helpers ────────────────────────────────────────
+  const goLogin      = () => setScreen(SCREENS.LOGIN);
+  const goAuditList  = () => setScreen(SCREENS.AUDIT_LIST);
   const goHome       = () => setScreen(SCREENS.HOME);
-  const goArea       = (areaId) => { setActiveAreaId(areaId); setScreen(SCREENS.AREA); };
+  const goArea       = (areaId)  => { setActiveAreaId(areaId);   setScreen(SCREENS.AREA); };
   const goAnnotate   = (photoId) => { setActivePhotoId(photoId); setScreen(SCREENS.ANNOTATE); };
   const goReview     = () => setScreen(SCREENS.REVIEW);
   const goSuccess    = () => setScreen(SCREENS.SUCCESS);
 
   return (
     <AuditProvider>
+      {screen === SCREENS.LOGIN && (
+        <LoginScreen onLogin={goAuditList} />
+      )}
+
+      {screen === SCREENS.AUDIT_LIST && (
+        <AuditListScreen
+          onNewAudit={goHome}
+          onResumeAudit={goHome}
+          onLogout={goLogin}
+        />
+      )}
+
       {screen === SCREENS.HOME && (
         <HomeScreen
           onAreaPress={goArea}
           onReviewPress={goReview}
+          onBack={goAuditList}
         />
       )}
 
@@ -77,9 +100,18 @@ export default function App() {
 
       {screen === SCREENS.SUCCESS && (
         <SuccessScreen
-          onNewAudit={goHome}
+          onBackToAudits={goAuditList}
         />
       )}
     </AuditProvider>
+  );
+}
+
+// ── Root ──────────────────────────────────────────────────────────
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppRouter />
+    </AuthProvider>
   );
 }

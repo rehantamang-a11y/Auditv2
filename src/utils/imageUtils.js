@@ -55,20 +55,34 @@ export function renderAnnotatedImage(photoDataUrl, annotations) {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0);
 
-      ctx.strokeStyle = '#FF3B30';
-      ctx.lineWidth   = 3;
-      ctx.lineCap     = 'round';
-      ctx.lineJoin    = 'round';
+      ctx.lineCap  = 'round';
+      ctx.lineJoin = 'round';
 
       annotations.forEach(mark => {
-        ctx.beginPath();
+        const c = mark.color ?? '#FF3B30';
+
         if (mark.type === 'ellipse') {
+          ctx.strokeStyle = c;
+          ctx.lineWidth   = 3;
+          ctx.beginPath();
           ctx.ellipse(mark.x, mark.y, mark.rx, mark.ry, 0, 0, Math.PI * 2);
           ctx.stroke();
         } else if (mark.type === 'path' && mark.points.length > 1) {
+          ctx.strokeStyle = c;
+          ctx.lineWidth   = 3;
+          ctx.beginPath();
           ctx.moveTo(mark.points[0].x, mark.points[0].y);
           mark.points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
           ctx.stroke();
+        } else if (mark.type === 'rect') {
+          ctx.strokeStyle = c;
+          ctx.lineWidth   = 3;
+          ctx.strokeRect(mark.x1, mark.y1, mark.x2 - mark.x1, mark.y2 - mark.y1);
+        } else if (mark.type === 'highlight') {
+          ctx.globalAlpha = 0.35;
+          ctx.fillStyle   = c;
+          ctx.fillRect(mark.x1, mark.y1, mark.x2 - mark.x1, mark.y2 - mark.y1);
+          ctx.globalAlpha = 1;
         }
       });
 

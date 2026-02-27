@@ -26,7 +26,7 @@ const BATHROOM_LABELS = {
 };
 
 export default function ReviewScreen({ onBack, onSubmitSuccess }) {
-  const { audit, totalPhotos, totalAnnotations } = useAudit();
+  const { audit, totalPhotos, totalAnnotations, markSubmitted } = useAudit();
   const [status, setStatus] = useState('idle'); // idle | submitting | error
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -44,6 +44,7 @@ export default function ReviewScreen({ onBack, onSubmitSuccess }) {
     try {
       await sendAuditEmail({ audit, totalPhotos, totalAnnotations, date: today });
       openWhatsApp({ audit, totalPhotos, capturedAreas, date: today });
+      markSubmitted();
       onSubmitSuccess();
     } catch (err) {
       setStatus('error');

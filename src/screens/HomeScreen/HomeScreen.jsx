@@ -30,7 +30,7 @@ const BATHROOM_TYPES = [
 const requiredAreas = AREAS.filter(a => a.required);
 const optionalAreas = AREAS.filter(a => !a.required);
 
-export default function HomeScreen({ onAreaPress, onReviewPress }) {
+export default function HomeScreen({ onAreaPress, onReviewPress, onBack }) {
   const {
     audit,
     setClientName,
@@ -42,7 +42,7 @@ export default function HomeScreen({ onAreaPress, onReviewPress }) {
   return (
     <div className="home-screen">
 
-      <Header />
+      <Header onBack={onBack} backLabel="‹ Audits" />
 
       {/* ── Meta inputs ── */}
       <section className="home-meta">

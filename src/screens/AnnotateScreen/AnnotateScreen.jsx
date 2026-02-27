@@ -5,21 +5,17 @@
  *
  * Responsibilities:
  *  - Render the photo as the canvas background (full-screen, dark backdrop)
- *  - Two annotation tools: Circle (drag to draw ellipse) and Draw (freehand)
- *  - All marks drawn in --annotation red (#FF3B30) per PRD
+ *  - Four annotation tools: Circle, Square (rect), Draw (freehand), Highlight
+ *  - Marks drawn in user-selected color (5-swatch palette, red default)
  *  - Undo button removes the last mark
  *  - Comment input pinned above Save button
  *  - Save → calls saveAnnotations() in context and returns to AreaScreen
  *
- * Implementation note:
- *  Annotation objects stored as:
- *    { type: 'ellipse', x, y, rx, ry }
- *    { type: 'path', points: [{x, y}] }
- *  These are re-drawn on the canvas on every render via useEffect.
- *  The canvas itself is NOT stored — only the annotation descriptors.
- *  On save, the composite image (photo + annotations) is rendered into
- *  a separate offscreen canvas to produce the annotated dataUrl stored
- *  alongside the raw photo. (TODO: implement in phase 2 if needed.)
+ * Annotation objects stored as:
+ *   { type: 'ellipse',   x, y, rx, ry,        color }
+ *   { type: 'path',      points: [{x,y}...],   color }
+ *   { type: 'rect',      x1, y1, x2, y2,       color }
+ *   { type: 'highlight', x1, y1, x2, y2,       color }
  */
 
 import { useRef, useState, useEffect, useCallback } from 'react';
@@ -27,8 +23,16 @@ import { useAudit } from '../../context/AuditContext';
 import { getArea }  from '../../data/areas';
 import './AnnotateScreen.css';
 
-const TOOL = { CIRCLE: 'circle', DRAW: 'draw' };
-const ANNOTATION_COLOR = '#FF3B30';
+const TOOL = { CIRCLE: 'circle', RECT: 'rect', DRAW: 'draw', HIGHLIGHT: 'highlight' };
+
+const PALETTE = [
+  { id: 'red',    hex: '#FF3B30' },
+  { id: 'yellow', hex: '#FFCC00' },
+  { id: 'blue',   hex: '#007AFF' },
+  { id: 'green',  hex: '#34C759' },
+  { id: 'white',  hex: '#FFFFFF' },
+];
+
 const LINE_WIDTH = 3;
 
 export default function AnnotateScreen({ areaId, photoId, onBack }) {
@@ -39,10 +43,11 @@ export default function AnnotateScreen({ areaId, photoId, onBack }) {
   const canvasRef  = useRef(null);
   const imageRef   = useRef(null);   // loaded Image object
 
-  const [tool, setTool]             = useState(TOOL.CIRCLE);
+  const [tool, setTool]               = useState(TOOL.CIRCLE);
+  const [color, setColor]             = useState(PALETTE[0].hex);
   const [annotations, setAnnotations] = useState(photo?.annotations || []);
-  const [comment, setComment]       = useState(photo?.comment || '');
-  const [drawing, setDrawing]       = useState(false);
+  const [comment, setComment]         = useState(photo?.comment || '');
+  const [drawing, setDrawing]         = useState(false);
   const [currentMark, setCurrentMark] = useState(null); // in-progress mark
 
   // ── Draw everything onto canvas ───────────────────────────────
@@ -54,22 +59,36 @@ export default function AnnotateScreen({ areaId, photoId, onBack }) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(imageRef.current, 0, 0, canvas.width, canvas.height);
 
-    ctx.strokeStyle = ANNOTATION_COLOR;
-    ctx.lineWidth   = LINE_WIDTH;
-    ctx.lineCap     = 'round';
-    ctx.lineJoin    = 'round';
+    ctx.lineCap  = 'round';
+    ctx.lineJoin = 'round';
 
     const allMarks = currentMark ? [...annotations, currentMark] : annotations;
 
     allMarks.forEach(mark => {
-      ctx.beginPath();
+      const c = mark.color ?? '#FF3B30';
+
       if (mark.type === 'ellipse') {
+        ctx.strokeStyle = c;
+        ctx.lineWidth   = LINE_WIDTH;
+        ctx.beginPath();
         ctx.ellipse(mark.x, mark.y, mark.rx, mark.ry, 0, 0, Math.PI * 2);
         ctx.stroke();
       } else if (mark.type === 'path' && mark.points.length > 1) {
+        ctx.strokeStyle = c;
+        ctx.lineWidth   = LINE_WIDTH;
+        ctx.beginPath();
         ctx.moveTo(mark.points[0].x, mark.points[0].y);
         mark.points.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
         ctx.stroke();
+      } else if (mark.type === 'rect') {
+        ctx.strokeStyle = c;
+        ctx.lineWidth   = LINE_WIDTH;
+        ctx.strokeRect(mark.x1, mark.y1, mark.x2 - mark.x1, mark.y2 - mark.y1);
+      } else if (mark.type === 'highlight') {
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle   = c;
+        ctx.fillRect(mark.x1, mark.y1, mark.x2 - mark.x1, mark.y2 - mark.y1);
+        ctx.globalAlpha = 1;
       }
     });
   }, [annotations, currentMark]);
@@ -110,9 +129,14 @@ export default function AnnotateScreen({ areaId, photoId, onBack }) {
     setDrawing(true);
     const pos = getPos(e);
     if (tool === TOOL.CIRCLE) {
-      setCurrentMark({ type: 'ellipse', x: pos.x, y: pos.y, rx: 0, ry: 0, startX: pos.x, startY: pos.y });
+      setCurrentMark({ type: 'ellipse', x: pos.x, y: pos.y, rx: 0, ry: 0,
+                       startX: pos.x, startY: pos.y, color });
+    } else if (tool === TOOL.RECT || tool === TOOL.HIGHLIGHT) {
+      setCurrentMark({ type: tool === TOOL.RECT ? 'rect' : 'highlight',
+                       x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y,
+                       startX: pos.x, startY: pos.y, color });
     } else {
-      setCurrentMark({ type: 'path', points: [pos] });
+      setCurrentMark({ type: 'path', points: [pos], color });
     }
   };
 
@@ -128,6 +152,8 @@ export default function AnnotateScreen({ areaId, photoId, onBack }) {
         x:  (pos.x + prev.startX) / 2,
         y:  (pos.y + prev.startY) / 2,
       }));
+    } else if (tool === TOOL.RECT || tool === TOOL.HIGHLIGHT) {
+      setCurrentMark(prev => ({ ...prev, x2: pos.x, y2: pos.y }));
     } else {
       setCurrentMark(prev => ({ ...prev, points: [...prev.points, pos] }));
     }
@@ -182,22 +208,27 @@ export default function AnnotateScreen({ areaId, photoId, onBack }) {
         />
       </div>
 
-      {/* ── Bottom bar: tools + comment + save ── */}
+      {/* ── Bottom bar: tools + color + comment + save ── */}
       <div className="annotate-bottombar">
         {/* Tool selector */}
         <div className="tool-row">
-          <button
-            className={`btn-tool ${tool === TOOL.CIRCLE ? 'active' : ''}`}
-            onClick={() => setTool(TOOL.CIRCLE)}
-          >
-            ⭕ Circle
-          </button>
-          <button
-            className={`btn-tool ${tool === TOOL.DRAW ? 'active' : ''}`}
-            onClick={() => setTool(TOOL.DRAW)}
-          >
-            ✏️ Draw
-          </button>
+          <button className={`btn-tool ${tool === TOOL.CIRCLE    ? 'active' : ''}`} onClick={() => setTool(TOOL.CIRCLE)}>⭕ Circle</button>
+          <button className={`btn-tool ${tool === TOOL.RECT      ? 'active' : ''}`} onClick={() => setTool(TOOL.RECT)}>▢ Square</button>
+          <button className={`btn-tool ${tool === TOOL.DRAW      ? 'active' : ''}`} onClick={() => setTool(TOOL.DRAW)}>✏️ Draw</button>
+          <button className={`btn-tool ${tool === TOOL.HIGHLIGHT ? 'active' : ''}`} onClick={() => setTool(TOOL.HIGHLIGHT)}>⬛ Hi-lite</button>
+        </div>
+
+        {/* Color palette */}
+        <div className="color-row">
+          {PALETTE.map(p => (
+            <button
+              key={p.id}
+              className={`btn-color ${color === p.hex ? 'active' : ''}`}
+              style={{ background: p.hex }}
+              onClick={() => setColor(p.hex)}
+              aria-label={p.id}
+            />
+          ))}
         </div>
 
         {/* Comment */}
