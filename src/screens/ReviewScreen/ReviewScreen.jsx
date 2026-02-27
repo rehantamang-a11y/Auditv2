@@ -16,7 +16,6 @@
 import { useState } from 'react';
 import { useAudit } from '../../context/AuditContext';
 import { AREAS }    from '../../data/areas';
-import { openWhatsApp } from '../../services/whatsappService';
 import { submitToSheets } from '../../services/sheetsService';
 import Header             from '../../components/Header/Header';
 import './ReviewScreen.css';
@@ -33,9 +32,7 @@ export default function ReviewScreen({ onBack, onSubmitSuccess }) {
     day: 'numeric', month: 'long', year: 'numeric',
   });
 
-  const capturedAreas = AREAS.filter(
-    a => (audit.areaPhotos[a.id]?.length ?? 0) > 0
-  );
+  const capturedAreas = AREAS.filter(a => (audit.areaPhotos[a.id]?.length ?? 0) > 0);
 
   const areasSummary    = capturedAreas.map(a => a.label).join(', ');
   const commentsSummary = capturedAreas
@@ -58,8 +55,6 @@ export default function ReviewScreen({ onBack, onSubmitSuccess }) {
     }
 
     setUploading(false);
-
-    openWhatsApp({ audit, totalPhotos, capturedAreas, date: today });
     markSubmitted();
     onSubmitSuccess();
   };
@@ -126,13 +121,6 @@ export default function ReviewScreen({ onBack, onSubmitSuccess }) {
             </div>
           );
         })}
-      </section>
-
-      {/* ── What happens explainer ── */}
-      <section className="review-explainer">
-        <h2 className="review-section-title">What happens when you submit</h2>
-        <p className="explainer-text">📊 Audit data and photos are saved to the team's Google Sheet and Drive.</p>
-        <p className="explainer-text">💬 WhatsApp opens with a summary message — tap Send to notify the group.</p>
       </section>
 
       {/* ── Submit ── */}

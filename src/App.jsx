@@ -40,7 +40,7 @@ const SCREENS = {
 function AppRouter() {
   const { user } = useAuth();
 
-  const [screen, setScreen]             = useState(user.loggedIn ? SCREENS.AUDIT_LIST : SCREENS.LOGIN);
+  const [screen, setScreen]             = useState(user ? SCREENS.AUDIT_LIST : SCREENS.LOGIN);
   const [activeAreaId, setActiveAreaId] = useState(null);
   const [activePhotoId, setActivePhotoId] = useState(null);
 

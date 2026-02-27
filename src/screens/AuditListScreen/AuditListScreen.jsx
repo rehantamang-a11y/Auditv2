@@ -16,7 +16,6 @@ import { useAuth }  from '../../context/AuthContext';
 import { useAudit } from '../../context/AuditContext';
 import { getAudits, deleteAudit } from '../../services/storageService';
 import { submitToSheets } from '../../services/sheetsService';
-import { openWhatsApp }   from '../../services/whatsappService';
 import { AREAS }          from '../../data/areas';
 import './AuditListScreen.css';
 
@@ -68,9 +67,9 @@ export default function AuditListScreen({ onNewAudit, onResumeAudit, onLogout })
     const totalAnnotations = Object.values(audit.areaPhotos || {})
       .flat()
       .reduce((s, p) => s + (p.annotations?.length ?? 0), 0);
-    const capturedAreas    = AREAS.filter(a => (audit.areaPhotos[a.id]?.length ?? 0) > 0);
-    const areasSummary     = capturedAreas.map(a => a.label).join(', ');
-    const commentsSummary  = capturedAreas
+    const areas            = AREAS.filter(a => (audit.areaPhotos[a.id]?.length ?? 0) > 0);
+    const areasSummary     = areas.map(a => a.label).join(', ');
+    const commentsSummary  = areas
       .flatMap(a => (audit.areaPhotos[a.id] || []).map(p => p.comment).filter(Boolean))
       .join(' | ');
 
@@ -80,10 +79,6 @@ export default function AuditListScreen({ onNewAudit, onResumeAudit, onLogout })
       console.warn('Resubmit to Sheets failed:', err);
     }
 
-    const date = new Date(audit.submittedAt || audit.createdAt).toLocaleDateString('en-GB', {
-      day: 'numeric', month: 'long', year: 'numeric',
-    });
-    openWhatsApp({ audit, totalPhotos, capturedAreas, date });
     setResubmittingId(null);
   };
 

@@ -4,6 +4,20 @@ All changes to EyEagle v2 are documented here. Newest entries first.
 
 ---
 
+## [2026-02-27] — Remove WhatsApp; fix blank screen after Firebase Auth
+
+**Agent:** Finn_{UI} / Hermes_{Submission}
+
+**Files changed:**
+- src/screens/ReviewScreen/ReviewScreen.jsx
+- src/screens/AuditListScreen/AuditListScreen.jsx
+- src/App.jsx
+
+**What changed:**
+Removed WhatsApp entirely from the submission flow. Submit now only uploads to Google Sheets + Drive and navigates to the success screen. Resubmit button on submitted cards also no longer opens WhatsApp. Fixed a blank screen crash caused by `App.jsx` checking `user.loggedIn` — the new Firebase AuthContext sets `user` to `null` when logged out (not `{ loggedIn: false }`), so the check was updated to `user ? AUDIT_LIST : LOGIN`.
+
+---
+
 ## [2026-02-27] — Firebase Auth employee login
 
 **Agent:** Rex_{Architect} / Finn_{UI}
