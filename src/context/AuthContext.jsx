@@ -1,53 +1,65 @@
 /**
  * AuthContext.jsx
  *
- * Technician identity and session state.
+ * Technician identity and session state via Firebase Auth.
  *
- * On first visit: login() registers credentials in localStorage.
- * On return visits: login() validates against stored credentials.
+ * login()  — signs in with email + password via Firebase
+ * logout() — signs out and clears local session
  *
- * TODO: Replace localStorage credential storage with Firebase Auth
- * when backend integration is added in a later phase.
+ * Firebase persists the session automatically (indexedDB),
+ * so technicians stay logged in across page reloads.
  */
 
-import { createContext, useContext, useState } from 'react';
-import { getUser, saveUser, clearUser } from '../services/storageService';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../services/firebaseService';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const stored = getUser();
-  const [user, setUser] = useState(
-    stored ? { name: stored.name, loggedIn: true } : { name: '', loggedIn: false }
-  );
+  const [user,    setUser]    = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Restore session on reload
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, firebaseUser => {
+      if (firebaseUser) {
+        setUser({ email: firebaseUser.email, name: firebaseUser.displayName || firebaseUser.email });
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
 
   /**
-   * Logs in or registers a technician.
+   * Sign in with email + password.
    * Returns { success: true } or { success: false, error: string }.
    */
-  const login = (name, password) => {
-    const trimmedName = name.trim();
-    const existing = getUser();
-
-    if (existing) {
-      // Return visit — validate credentials
-      if (existing.name !== trimmedName || existing.password !== password) {
-        return { success: false, error: 'Incorrect name or password.' };
-      }
-    } else {
-      // First visit — register
-      saveUser(trimmedName, password);
+  const login = async (email, password) => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      return { success: true };
+    } catch (err) {
+      const msg =
+        err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password'
+          ? 'Incorrect email or password.'
+          : err.code === 'auth/user-not-found'
+          ? 'No account found with that email.'
+          : err.code === 'auth/too-many-requests'
+          ? 'Too many attempts. Try again later.'
+          : 'Sign in failed. Please try again.';
+      return { success: false, error: msg };
     }
-
-    setUser({ name: trimmedName, loggedIn: true });
-    return { success: true };
   };
 
-  /** Clears session. Audits remain in localStorage. */
-  const logout = () => {
-    clearUser();
-    setUser({ name: '', loggedIn: false });
+  const logout = async () => {
+    await signOut(auth);
+    setUser(null);
   };
+
+  if (loading) return null; // wait for Firebase to restore session
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>

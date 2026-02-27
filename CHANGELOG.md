@@ -4,6 +4,21 @@ All changes to EyEagle v2 are documented here. Newest entries first.
 
 ---
 
+## [2026-02-27] — Firebase Auth employee login
+
+**Agent:** Rex_{Architect} / Finn_{UI}
+
+**Files changed:**
+- src/services/firebaseService.js (created)
+- src/context/AuthContext.jsx
+- src/screens/LoginScreen/LoginScreen.jsx
+- .env (not committed — gitignored)
+
+**What changed:**
+Replaced the localStorage self-registration system with Firebase Email/Password authentication. Employees can no longer create their own accounts — accounts are created by the admin in the Firebase Console. `firebaseService.js` initialises the Firebase app and exports the Auth instance. `AuthContext` now uses `signInWithEmailAndPassword` and `onAuthStateChanged` so sessions persist across page reloads automatically. `LoginScreen` now takes an email field instead of a name field, shows a loading state while Firebase resolves, and surfaces specific error messages for wrong credentials, missing account, and too many attempts. Firebase project: `eyeagle-assessment`.
+
+---
+
 ## [2026-02-27] — Fix Apps Script URL (401 → public endpoint)
 
 **Agent:** Ellis_{Docs}
