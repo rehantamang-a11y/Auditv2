@@ -4,6 +4,18 @@ All changes to EyEagle v2 are documented here. Newest entries first.
 
 ---
 
+## [2026-02-27] — Fix Apps Script URL (401 → public endpoint)
+
+**Agent:** Ellis_{Docs}
+
+**Files changed:**
+- .env (not committed — gitignored)
+
+**What changed:**
+Apps Script deployment was using the Google Workspace domain-scoped URL (`/a/macros/ipsator.com/s/...`) which requires Google account authentication, causing every POST from the app to return 401. Redeployed the Apps Script with "Who has access: Anyone" which produced the public URL (`/macros/s/...`). Updated `REACT_APP_APPS_SCRIPT_URL` in `.env` and redeployed to GitHub Pages. Sheets and Drive confirmed working after fix.
+
+---
+
 ## [2026-02-27] — Add Resubmit button to submitted audit cards
 
 **Agent:** Finn_{UI} / Hermes_{Submission}
