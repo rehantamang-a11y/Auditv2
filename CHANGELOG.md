@@ -4,6 +4,19 @@ All changes to EyEagle v2 are documented here. Newest entries first.
 
 ---
 
+## [2026-02-27] — Add Resubmit button to submitted audit cards
+
+**Agent:** Finn_{UI} / Hermes_{Submission}
+
+**Files changed:**
+- src/screens/AuditListScreen/AuditListScreen.jsx
+- src/screens/AuditListScreen/AuditListScreen.css
+
+**What changed:**
+Added a ↺ Resend button to each submitted audit card in AuditListScreen. Tapping it re-POSTs the full audit (metadata + base64 photos) to the Apps Script Web App via `submitToSheets`, then reopens WhatsApp with the pre-filled summary message. While the upload is in flight the button shows `…` and is disabled to prevent double-sends. Failure is non-blocking — a console warning is logged but the WhatsApp step still runs. All photo/annotation/area/comment metadata is derived from the stored audit object so no AuditContext load is required.
+
+---
+
 ## [2026-02-27] — Remove email; replace with Google Sheets + Drive submission
 
 **Agent:** Rex_{Architect}

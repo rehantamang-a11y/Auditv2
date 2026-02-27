@@ -189,6 +189,29 @@
   color: #155724;
 }
 
+/* Resubmit button */
+.btn-resubmit-audit {
+  font-size: 18px;
+  color: var(--brand);
+  padding: 8px;
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  transition: color 0.15s, background 0.15s;
+}
+
+.btn-resubmit-audit:active {
+  background: var(--brand-light);
+}
+
+.btn-resubmit-audit:disabled {
+  opacity: 0.4;
+}
+
 /* Delete button */
 .btn-delete-audit {
   font-size: 14px;

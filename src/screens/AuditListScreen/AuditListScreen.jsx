@@ -15,6 +15,9 @@ import { useState } from 'react';
 import { useAuth }  from '../../context/AuthContext';
 import { useAudit } from '../../context/AuditContext';
 import { getAudits, deleteAudit } from '../../services/storageService';
+import { submitToSheets } from '../../services/sheetsService';
+import { openWhatsApp }   from '../../services/whatsappService';
+import { AREAS }          from '../../data/areas';
 import './AuditListScreen.css';
 
 const BATHROOM_LABELS = {
@@ -42,6 +45,7 @@ export default function AuditListScreen({ onNewAudit, onResumeAudit, onLogout })
   const [audits, setAudits] = useState(() =>
     getAudits().filter(a => a.technicianName === user.name)
   );
+  const [resubmittingId, setResubmittingId] = useState(null);
 
   const drafts    = audits.filter(a => a.status === 'draft');
   const submitted = audits.filter(a => a.status === 'submitted');
@@ -54,6 +58,33 @@ export default function AuditListScreen({ onNewAudit, onResumeAudit, onLogout })
   const handleResume = (audit) => {
     loadAudit(audit);
     onResumeAudit();
+  };
+
+  const handleResubmit = async (audit, e) => {
+    e.stopPropagation();
+    setResubmittingId(audit.id);
+
+    const totalPhotos      = photoCount(audit.areaPhotos);
+    const totalAnnotations = Object.values(audit.areaPhotos || {})
+      .flat()
+      .reduce((s, p) => s + (p.annotations?.length ?? 0), 0);
+    const capturedAreas    = AREAS.filter(a => (audit.areaPhotos[a.id]?.length ?? 0) > 0);
+    const areasSummary     = capturedAreas.map(a => a.label).join(', ');
+    const commentsSummary  = capturedAreas
+      .flatMap(a => (audit.areaPhotos[a.id] || []).map(p => p.comment).filter(Boolean))
+      .join(' | ');
+
+    try {
+      await submitToSheets(audit, { totalPhotos, totalAnnotations, areasSummary, commentsSummary });
+    } catch (err) {
+      console.warn('Resubmit to Sheets failed:', err);
+    }
+
+    const date = new Date(audit.submittedAt || audit.createdAt).toLocaleDateString('en-GB', {
+      day: 'numeric', month: 'long', year: 'numeric',
+    });
+    openWhatsApp({ audit, totalPhotos, capturedAreas, date });
+    setResubmittingId(null);
   };
 
   const handleDelete = (id, e) => {
@@ -149,6 +180,14 @@ export default function AuditListScreen({ onNewAudit, onResumeAudit, onLogout })
                   {areaCount(audit.areaPhotos)} area{areaCount(audit.areaPhotos) !== 1 ? 's' : ''} · {photoCount(audit.areaPhotos)} photo{photoCount(audit.areaPhotos) !== 1 ? 's' : ''}
                 </span>
               </div>
+              <button
+                className="btn-resubmit-audit"
+                onClick={(e) => handleResubmit(audit, e)}
+                disabled={resubmittingId === audit.id}
+                aria-label="Resubmit audit"
+              >
+                {resubmittingId === audit.id ? '…' : '↺'}
+              </button>
               <button
                 className="btn-delete-audit"
                 onClick={(e) => handleDelete(audit.id, e)}

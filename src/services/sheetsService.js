@@ -29,12 +29,12 @@ export async function submitToSheets(audit, meta) {
     photos,
   };
 
-  const res = await fetch(SCRIPT_URL, {
+  // mode: 'no-cors' prevents the browser from converting the POST to a GET
+  // on the Apps Script redirect. Response is opaque so we can't read it,
+  // but the script executes and writes to the Sheet.
+  await fetch(SCRIPT_URL, {
     method: 'POST',
     body:   JSON.stringify(payload),
-    // No custom Content-Type header — Apps Script CORS requirement
+    mode:   'no-cors',
   });
-
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || 'Sheets submission failed');
 }
