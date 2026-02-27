@@ -16,8 +16,8 @@
 import { useState } from 'react';
 import { useAudit } from '../../context/AuditContext';
 import { AREAS }    from '../../data/areas';
-import { sendAuditEmail } from '../../services/emailService';
-import { openWhatsApp }   from '../../services/whatsappService';
+import { openWhatsApp } from '../../services/whatsappService';
+import { submitToSheets } from '../../services/sheetsService';
 import Header             from '../../components/Header/Header';
 import './ReviewScreen.css';
 
@@ -27,8 +27,7 @@ const BATHROOM_LABELS = {
 
 export default function ReviewScreen({ onBack, onSubmitSuccess }) {
   const { audit, totalPhotos, totalAnnotations, markSubmitted } = useAudit();
-  const [status, setStatus] = useState('idle'); // idle | submitting | error
-  const [errorMsg, setErrorMsg] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   const today = new Date().toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric',
@@ -38,18 +37,31 @@ export default function ReviewScreen({ onBack, onSubmitSuccess }) {
     a => (audit.areaPhotos[a.id]?.length ?? 0) > 0
   );
 
+  const areasSummary    = capturedAreas.map(a => a.label).join(', ');
+  const commentsSummary = capturedAreas
+    .flatMap(a => (audit.areaPhotos[a.id] || []).map(p => p.comment).filter(Boolean))
+    .join(' | ');
+
   const handleSubmit = async () => {
-    setStatus('submitting');
-    setErrorMsg('');
+    setUploading(true);
+
+    // Non-blocking Sheets + Drive upload
     try {
-      await sendAuditEmail({ audit, totalPhotos, totalAnnotations, date: today });
-      openWhatsApp({ audit, totalPhotos, capturedAreas, date: today });
-      markSubmitted();
-      onSubmitSuccess();
+      await submitToSheets(audit, {
+        totalPhotos,
+        totalAnnotations,
+        areasSummary,
+        commentsSummary,
+      });
     } catch (err) {
-      setStatus('error');
-      setErrorMsg(err.message || 'Email failed to send. Please try again.');
+      console.warn('Sheets upload failed:', err);
     }
+
+    setUploading(false);
+
+    openWhatsApp({ audit, totalPhotos, capturedAreas, date: today });
+    markSubmitted();
+    onSubmitSuccess();
   };
 
   return (
@@ -119,23 +131,18 @@ export default function ReviewScreen({ onBack, onSubmitSuccess }) {
       {/* ── What happens explainer ── */}
       <section className="review-explainer">
         <h2 className="review-section-title">What happens when you submit</h2>
-        <p className="explainer-text">📧 A full audit report is emailed to the team.</p>
+        <p className="explainer-text">📊 Audit data and photos are saved to the team's Google Sheet and Drive.</p>
         <p className="explainer-text">💬 WhatsApp opens with a summary message — tap Send to notify the group.</p>
       </section>
-
-      {/* ── Error ── */}
-      {status === 'error' && (
-        <div className="review-error">{errorMsg}</div>
-      )}
 
       {/* ── Submit ── */}
       <div className="review-submit-strip">
         <button
           className="btn-primary btn-submit"
           onClick={handleSubmit}
-          disabled={status === 'submitting'}
+          disabled={uploading}
         >
-          {status === 'submitting' ? 'Sending…' : 'Submit Audit'}
+          {uploading ? 'Uploading…' : 'Submit Audit'}
         </button>
       </div>
     </div>

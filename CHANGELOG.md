@@ -4,6 +4,20 @@ All changes to EyEagle v2 are documented here. Newest entries first.
 
 ---
 
+## [2026-02-27] — Remove email; replace with Google Sheets + Drive submission
+
+**Agent:** Rex_{Architect}
+
+**Files changed:**
+- src/services/sheetsService.js (created)
+- src/screens/ReviewScreen/ReviewScreen.jsx
+- .env
+
+**What changed:**
+Removed EmailJS email submission entirely — it required third-party credentials, added a 200/month send cap, and sent no photos. Replaced with a Google Apps Script Web App as a free serverless backend. On submit, the app POSTs the full audit (metadata + base64 photos) to the Apps Script URL. The script appends a row to a Google Sheet (submitted time, date, technician, client, bathroom type, areas, photo count, annotation count, comments, Drive folder link, audit ID) and saves each photo as a JPEG into a per-audit Drive subfolder named `Audit – {client} – {date}`. Upload is non-blocking on failure — if the POST fails (offline, misconfigured URL), the app still completes the WhatsApp step and shows the success screen; a console warning is logged. Added `REACT_APP_APPS_SCRIPT_URL` to `.env`. Removed all `REACT_APP_EMAILJS_*` vars from `.env`. Updated the submit explainer text to reflect Sheets + Drive instead of email.
+
+---
+
 ## [2026-02-26] — Vera QA pass — fix touch target violations
 
 **Agent:** Vera_{QA} / Finn_{UI}
