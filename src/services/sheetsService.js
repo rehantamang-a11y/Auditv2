@@ -1,3 +1,6 @@
+import { getArea } from '../data/areas';
+import { renderAnnotatedImage } from '../utils/imageUtils';
+
 const SCRIPT_URL = process.env.REACT_APP_APPS_SCRIPT_URL;
 
 /**
@@ -8,13 +11,30 @@ const SCRIPT_URL = process.env.REACT_APP_APPS_SCRIPT_URL;
 export async function submitToSheets(audit, meta) {
   if (!SCRIPT_URL) return; // skip silently if not configured
 
-  // Flatten all photos into one array with area label
-  const photos = Object.entries(audit.areaPhotos).flatMap(([areaId, photoArr]) =>
-    (photoArr || []).map(photo => ({
-      areaLabel: areaId,
-      dataUrl:   photo.dataUrl,
-    }))
-  );
+  // Flatten all photos into one array.
+  // - areaLabel uses the human-readable label from areas.js (e.g. "Floor Surface")
+  // - photoIndex is 1-based within the area, for Drive file naming
+  // - dataUrl is the annotated composite if the photo has marks, raw otherwise
+  // - comment is included so the Apps Script can add it as a Drive file description
+  const photoEntries = Object.entries(audit.areaPhotos);
+  const photos = [];
+
+  for (const [areaId, photoArr] of photoEntries) {
+    const areaLabel = getArea(areaId)?.label ?? areaId;
+    for (let i = 0; i < (photoArr || []).length; i++) {
+      const photo = photoArr[i];
+      const hasAnnotations = photo.annotations && photo.annotations.length > 0;
+      const dataUrl = hasAnnotations
+        ? await renderAnnotatedImage(photo.dataUrl, photo.annotations)
+        : photo.dataUrl;
+      photos.push({
+        areaLabel,
+        photoIndex: i + 1,
+        dataUrl,
+        comment: photo.comment || '',
+      });
+    }
+  }
 
   const payload = {
     auditId:          audit.id,

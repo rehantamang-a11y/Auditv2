@@ -4,6 +4,20 @@ All changes to EyEagle v2 are documented here. Newest entries first.
 
 ---
 
+## [2026-03-03] — Fix Drive photo labeling and bake annotations into submitted images
+
+**Agent:** Hermes_{Submission}
+
+**Files changed:**
+- src/services/sheetsService.js
+
+**What changed:**
+Two bugs fixed in the submission pipeline. First, Drive photos were being labeled with raw area IDs (e.g. `floor-surface`) instead of human-readable names. Fixed by importing `getArea()` from `areas.js` and using `getArea(areaId).label` (e.g. "Floor Surface") as the label sent to the Apps Script. Second, annotations drawn by technicians were not appearing on Drive photos — the raw compressed image was being sent rather than the annotated composite. Fixed by importing `renderAnnotatedImage()` from `imageUtils.js` and calling it for any photo that has annotation marks; photos without annotations continue to use the raw `dataUrl` to avoid unnecessary processing. Also added `photoIndex` (1-based, per area) and `comment` to each photo object in the payload so the Apps Script can name Drive files clearly (e.g. "Floor Surface — 1.jpg") and store per-photo comments as file descriptions.
+
+**Note for Rey:** The Apps Script controls the actual Drive filename. It should use `areaLabel` + `photoIndex` from the payload for naming, e.g. `areaLabel + " — " + photoIndex + ".jpg"`. If filenames in Drive still look wrong after this deploy, the Apps Script file-saving block will need a small update to use those fields.
+
+---
+
 ## [2026-02-27] — Remove WhatsApp; fix blank screen after Firebase Auth
 
 **Agent:** Finn_{UI} / Hermes_{Submission}
